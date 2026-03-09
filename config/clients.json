@@ -1,17 +1,7 @@
 {
-  "example-client": {
-    "allowedOrigins": ["https://example.com", "https://www.example.com"],
-    "recipientEmail": "contact@example.com",
-    "displayName": "Example Client"
-  },
-  "acme-corp": {
-    "allowedOrigins": ["https://acme-corp.com", "https://app.acme-corp.com"],
-    "recipientEmail": "support@acmecorp.com",
-    "displayName": "Acme Corporation"
-  },
-  "test-site": {
-    "allowedOrigins": ["http://localhost:3000", "http://localhost:5173"],
-    "recipientEmail": "developer@test.com",
-    "displayName": "Test Site (Development)"
+  "pershing-square": {
+    "allowedOrigins": ["https://pershingsquare.nxhub.online", "http://localhost:3000"],
+    "recipientEmail": "wmweemba@gmail.com",
+    "displayName": "Pershing Square Form Submission"
   }
 }
