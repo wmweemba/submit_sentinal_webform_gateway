@@ -343,7 +343,13 @@ const formatEmailContent = (formData, files = []) => {
  * @param {string} clientSlug - Client identifier from URL parameter
  * @returns {object} JSON response with success/error status
  */
-app.post('/submit/:clientSlug', dynamicCors, upload.array('attachments', 5), async (req, res) => {
+// Use upload.fields() to accept both 'attachment' (singular) and 'attachments' (plural) field names
+const fileUploadMiddleware = upload.fields([
+  { name: 'attachment', maxCount: 1 },
+  { name: 'attachments', maxCount: 5 }
+]);
+
+app.post('/submit/:clientSlug', dynamicCors, fileUploadMiddleware, async (req, res) => {
   try {
     const { clientSlug } = req.params;
     const clientConfig = CLIENTS_CONFIG[clientSlug];
@@ -378,7 +384,18 @@ app.post('/submit/:clientSlug', dynamicCors, upload.array('attachments', 5), asy
     }
 
     // ==================== EMAIL PREPARATION ====================
-    const emailContent = formatEmailContent(sanitizedBody, req.files);
+    // Combine files from both 'attachment' and 'attachments' fields
+    const allFiles = [];
+    if (req.files) {
+      if (req.files['attachment']) {
+        allFiles.push(...req.files['attachment']);
+      }
+      if (req.files['attachments']) {
+        allFiles.push(...req.files['attachments']);
+      }
+    }
+    
+    const emailContent = formatEmailContent(sanitizedBody, allFiles);
     const recipientEmail = clientConfig.recipientEmail;
     const displayName = clientConfig.displayName || clientSlug;
 
@@ -388,11 +405,11 @@ app.post('/submit/:clientSlug', dynamicCors, upload.array('attachments', 5), asy
       subject: `New Form Submission: ${displayName}`,
       html: emailContent,
       // Attach files if any were uploaded
-      attachments: req.files?.map(file => ({
+      attachments: allFiles.map(file => ({
         filename: file.originalname,
         path: file.path,
         contentType: file.mimetype
-      })) || []
+      }))
     };
 
     // ==================== EMAIL DELIVERY ====================
