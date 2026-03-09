@@ -1,7 +1,7 @@
 {
   "pershing-square": {
     "allowedOrigins": ["https://pershingsquare.nxhub.online", "http://localhost:3000"],
-    "recipientEmail": "wmweemba@gmail.com",
+    "recipientEmail": "consult@psq-associates.com",
     "displayName": "Pershing Square Form Submission"
   }
 }
