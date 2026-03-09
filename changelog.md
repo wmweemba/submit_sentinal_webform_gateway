@@ -5,6 +5,48 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-03-09
+
+### Fixed
+- **Coolify deployment build error**: `npm ci` failing due to missing `package-lock.json`
+  - Removed `package-lock.json` from `.gitignore` to enable reproducible builds
+  - Updated Dockerfile: Changed `npm ci --only=production` to `npm ci --omit=dev` (correct npm v7+ syntax)
+  - Removed deprecated `--experimental-modules` flag from Dockerfile (Node.js 18+ natively supports ES modules)
+  
+- **SMTP configuration issues**:
+  - Created `.env` file with Resend.com SMTP configuration
+  - Fixed SMTP connection errors by properly configuring port 465 with SSL/TLS
+  - Verified SMTP connection to Resend.com works successfully
+  
+- **Port conflict issues**:
+  - Resolved `EADDRINUSE: address already in use :::3000` errors
+  - Added instructions for killing processes using port 3000
+  
+- **Development environment setup**:
+  - Server now starts successfully with proper SMTP configuration
+  - Health endpoint (`/health`) responds correctly
+  - All security features enabled and functional
+
+### Changed
+- **Client configuration**: 
+  - Removed dummy example clients (`example-client`, `acme-corp`, `test-site`)
+  - Added production client: `pershing-square` with:
+    - Allowed origins: `https://pershingsquare.nxhub.online` and `http://localhost:3000`
+    - Recipient email: `wmweemba@gmail.com`
+    - Display name: `Pershing Square Form Submission`
+
+### Added
+- **Development testing capabilities**:
+  - Server can now be tested locally with `npm run dev`
+  - Form submissions can be sent to `http://localhost:3000/submit/pershing-square`
+  - Emails are successfully delivered via Resend.com SMTP
+
+### Technical Improvements
+- **Docker build optimization**: Proper dependency management with `package-lock.json`
+- **Node.js compatibility**: Removed deprecated flags for cleaner execution
+- **Environment management**: Proper `.env` file structure for development and production
+- **Error handling**: Improved startup error messages and troubleshooting guidance
+
 ## [1.0.0] - 2026-03-08
 
 ### Added
