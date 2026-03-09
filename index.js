@@ -399,7 +399,9 @@ app.post('/submit/:clientSlug', dynamicCors, fileUploadMiddleware, async (req, r
     const displayName = clientConfig.displayName || clientSlug;
 
     const mailOptions = {
-      from: `"Submit Sentinel" <${process.env.SMTP_USER}>`,
+      // Resend requires a valid email address in the from field
+      // Using a generic sender address that should work with Resend SMTP
+      from: `Submit Sentinel <onboarding@resend.dev>`,
       to: recipientEmail,
       subject: `New Form Submission: ${displayName}`,
       html: emailContent,
