@@ -12,7 +12,7 @@ COPY package*.json ./
 
 # Install production dependencies only (no dev dependencies)
 # Using npm ci for reproducible builds (clean install)
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 # ==================== RUNTIME STAGE ====================
 FROM node:18-alpine
