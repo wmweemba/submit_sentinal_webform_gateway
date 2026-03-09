@@ -57,7 +57,7 @@ ENV NODE_ENV=production \
     UPLOAD_DIR=./uploads
 
 # Start the application using ES modules support
-CMD ["node", "--experimental-modules", "index.js"]
+CMD ["node", "index.js"]
 
 # ==================== DOCKER USAGE NOTES ====================
 #
