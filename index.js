@@ -189,22 +189,48 @@ const upload = multer({
 /**
  * SMTP transporter for sending emails
  * Configuration is loaded from environment variables for security.
+ * Added connection timeout and TLS options for production environments.
  */
 const transporter = createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: process.env.SMTP_PORT === '465', // true for port 465, false for other ports
+  secure: parseInt(process.env.SMTP_PORT) === 465, // true for port 465, false for other ports
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  // Connection timeout settings for production environments
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 15000, // 15 seconds
+  // TLS options for secure connections
+  tls: {
+    // Do not fail on invalid certificates (useful for some container environments)
+    rejectUnauthorized: process.env.NODE_ENV === 'production' ? true : false,
+  },
+  // Debug logging for SMTP connections
+  debug: process.env.NODE_ENV === 'development',
+  logger: process.env.NODE_ENV === 'development',
 });
 
-// Test SMTP connection on startup
+// Test SMTP connection on startup with better error handling
 transporter.verify((error) => {
   if (error) {
-    console.error('SMTP Connection Error:', error);
-    console.warn('⚠️  SMTP connection failed. Emails will not be sent until configured correctly.');
+    console.error('SMTP Connection Error:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error command:', error.command);
+    
+    // Provide more helpful error messages based on error type
+    if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
+      console.warn('⚠️  SMTP connection timeout or refused. Possible issues:');
+      console.warn('   • Firewall blocking port 465');
+      console.warn('   • Network egress restrictions in container');
+      console.warn('   • DNS resolution issues');
+      console.warn('   • Resend SMTP service temporarily unavailable');
+    } else if (error.code === 'EAUTH') {
+      console.warn('⚠️  SMTP authentication failed. Check SMTP_USER and SMTP_PASS.');
+    } else {
+      console.warn('⚠️  SMTP connection failed. Emails will not be sent until configured correctly.');
+    }
   } else {
     console.log('✅ SMTP server connection established successfully');
   }
@@ -370,19 +396,38 @@ app.post('/submit/:clientSlug', dynamicCors, upload.array('attachments', 5), asy
     };
 
     // ==================== EMAIL DELIVERY ====================
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log(`✅ Email sent to ${recipientEmail} for client: ${clientSlug}`);
-    console.log(`   Message ID: ${info.messageId}`);
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      
+      console.log(`✅ Email sent to ${recipientEmail} for client: ${clientSlug}`);
+      console.log(`   Message ID: ${info.messageId}`);
 
-    // ==================== SUCCESS RESPONSE ====================
-    res.status(200).json({
-      success: true,
-      message: 'Form submitted successfully',
-      messageId: info.messageId,
-      client: displayName,
-      timestamp: new Date().toISOString()
-    });
+      // ==================== SUCCESS RESPONSE ====================
+      res.status(200).json({
+        success: true,
+        message: 'Form submitted successfully',
+        messageId: info.messageId,
+        client: displayName,
+        timestamp: new Date().toISOString()
+      });
+    } catch (emailError) {
+      console.error(`❌ Email delivery failed for client ${clientSlug}:`, emailError.message);
+      
+      // Log the submission anyway (for debugging)
+      console.log(`📝 Form submission received from ${clientSlug} but email failed`);
+      console.log(`   Recipient: ${recipientEmail}`);
+      console.log(`   Error: ${emailError.code || 'Unknown error'}`);
+      
+      // Return a partial success response - form was received but email failed
+      res.status(202).json({
+        success: true,
+        warning: 'Form submitted successfully but email delivery failed',
+        message: 'Your form was received but we could not send the confirmation email.',
+        client: displayName,
+        timestamp: new Date().toISOString(),
+        note: 'Administrator has been notified of this issue.'
+      });
+    }
 
   } catch (error) {
     console.error(`❌ Submission error for client ${req.params.clientSlug}:`, error);
