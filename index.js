@@ -27,7 +27,7 @@ import { createTransport } from 'nodemailer';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { extname, join } from 'path';
 import { config } from 'dotenv';
@@ -141,9 +141,8 @@ const dynamicCors = (req, res, next) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Create upload directory if it doesn't exist
-    const fs = require('fs');
-    if (!fs.existsSync(UPLOAD_DIR)) {
-      fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    if (!existsSync(UPLOAD_DIR)) {
+      mkdirSync(UPLOAD_DIR, { recursive: true });
     }
     cb(null, UPLOAD_DIR);
   },
@@ -194,7 +193,7 @@ const upload = multer({
 const transporter = createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: parseInt(process.env.SMTP_PORT) === 465, // true for port 465, false for other ports
+  secure: false, // false for port 587 (STARTTLS), true for port 465 (SSL)
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -222,7 +221,7 @@ transporter.verify((error) => {
     // Provide more helpful error messages based on error type
     if (error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED') {
       console.warn('⚠️  SMTP connection timeout or refused. Possible issues:');
-      console.warn('   • Firewall blocking port 465');
+      console.warn(`   • Firewall blocking port ${process.env.SMTP_PORT || 587}`);
       console.warn('   • Network egress restrictions in container');
       console.warn('   • DNS resolution issues');
       console.warn('   • Resend SMTP service temporarily unavailable');
