@@ -49,6 +49,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) ||
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const ALLOWED_MIMETYPES = (process.env.ALLOWED_MIMETYPES || 'image/jpeg,image/png,image/gif,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document').split(',');
 const HONEYPOT_FIELD = process.env.HONEYPOT_FIELD || '_honeypot';
+const SMTP_FROM = process.env.SMTP_FROM || 'Submit Sentinel <onboarding@resend.dev>';
 
 // Load client configuration
 const CLIENTS_CONFIG = JSON.parse(
@@ -405,9 +406,8 @@ app.post('/submit/:clientSlug', dynamicCors, fileUploadMiddleware, async (req, r
     const displayName = clientConfig.displayName || clientSlug;
 
     const mailOptions = {
-      // Resend requires a valid email address in the from field
-      // Using a generic sender address that should work with Resend SMTP
-      from: `Submit Sentinel <onboarding@resend.dev>`,
+      // Use configurable from address with fallback
+      from: SMTP_FROM,
       to: recipientEmail,
       subject: `New Form Submission: ${displayName}`,
       html: emailContent,
