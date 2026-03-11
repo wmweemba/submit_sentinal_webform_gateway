@@ -5,6 +5,37 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-03-11
+
+### Added
+- **New domain support**: Added `https://psq-associates.com` to allowed origins for `pershing-square` client
+- **Configurable sender email**: Added `SMTP_FROM` environment variable for flexible email configuration
+
+### Fixed
+- **Resend SMTP restriction issue**: Fixed "550 You can only send testing emails to your own email address" error
+  - Removed hardcoded `onboarding@resend.dev` from mail options
+  - Added configurable `SMTP_FROM` environment variable with fallback
+  - Updated `.env.example` and local `.env` with `SMTP_FROM` configuration
+  - Set default to use verified domain `mynexusgroup.com` for production emails
+
+### Changed
+- **Client configuration updated**: 
+  - Updated recipient email for `pershing-square` client to `consult@psq-associates.com`
+  - Added `https://psq-associates.com` to allowed origins
+- **Documentation improvements**:
+  - Updated README.md with `SMTP_FROM` configuration instructions
+  - Added important note for Resend SMTP users about domain verification
+  - Updated Docker Compose and Coolify deployment examples
+- **Code refactoring**:
+  - Moved hardcoded email sender to configurable environment variable
+  - Improved code maintainability with centralized configuration constants
+
+### Technical Improvements
+- **Environment configuration**: Added `SMTP_FROM` support across all configuration files
+- **Error handling**: Better handling of Resend SMTP domain verification requirements
+- **Deployment guidance**: Clear instructions for Coolify environment variable setup
+- **Backward compatibility**: Maintained fallback to `Submit Sentinel <onboarding@resend.dev>` for existing deployments
+
 ## [1.0.1] - 2026-03-09
 
 ### Fixed
