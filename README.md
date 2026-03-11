@@ -105,6 +105,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-specific-password
+SMTP_FROM=Submit Sentinel <your-email@gmail.com>
 
 # Server Configuration (Optional)
 PORT=3000
@@ -116,6 +117,12 @@ UPLOAD_DIR=./uploads
 HONEYPOT_FIELD=_honeypot
 LOG_LEVEL=info
 ```
+
+**Important Note for Resend SMTP Users:**
+When using Resend SMTP (`smtp.resend.com`), you must:
+1. Verify your domain at [resend.com/domains](https://resend.com/domains)
+2. Set `SMTP_FROM` to an email address from your verified domain (e.g., `Submit Sentinel <noreply@yourdomain.com>`)
+3. Do not use `@resend.dev` addresses for production emails to non-verified recipients
 
 ### Client Configuration
 
@@ -280,6 +287,7 @@ services:
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
       - NODE_ENV=production
     restart: unless-stopped
     healthcheck:
@@ -297,11 +305,12 @@ volumes:
 
 1. Connect your repository to Coolify
 2. Add the following environment variables in Coolify:
-   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
-3. Configure persistent volumes:
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+3. **Important for Resend SMTP**: Set `SMTP_FROM` to an email from your verified domain (e.g., `Submit Sentinel <noreply@mynexusgroup.com>`)
+4. Configure persistent volumes:
    - `/app/config` for client configuration
    - `/app/uploads` for temporary file storage
-4. Deploy with the provided Dockerfile
+5. Deploy with the provided Dockerfile
 
 ## 🔍 Monitoring & Logging
 
