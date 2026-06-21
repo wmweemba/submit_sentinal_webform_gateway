@@ -148,6 +148,17 @@ Edit `config/clients.json` to define your clients:
 - **recipientEmail**: Where form submissions will be sent
 - **displayName**: Friendly name for email subjects
 
+#### Adding a New Client (Production / Coolify)
+
+`config/clients.json` is read once at process startup (`readFileSync` in `index.js`) and is **not hot-reloaded** — a running server will not see changes until it restarts. The Dockerfile already copies the whole repo (including `config/clients.json`) into the image at build time, so the supported way to add or update a client is:
+
+1. Edit `config/clients.json` in this repo with the new client entry.
+2. Commit and push to `main`.
+3. Let Coolify's auto-deploy rebuild the image and restart the container — this picks up the new file automatically.
+4. Verify via the Coolify service terminal: `cat /app/config/clients.json` should show the new client.
+
+**Do not** attach a persistent volume to `/app/config` in Coolify. A mounted volume at that path shadows the file baked into the image, so the container will keep serving whatever was last written to the volume instead of your git-committed config — pushes will appear to do nothing. (This caused a real incident: a stale persistent volume meant a new client config never took effect despite being pushed to `main`; removing the volume mapping and redeploying fixed it.) Keeping `clients.json` image-baked (no writable mount) also means there's no live-editable path in production to secure — every change is auditable through git history instead of ad hoc server edits.
+
 ## 📡 API Reference
 
 ### Submit Form Endpoint
@@ -308,8 +319,8 @@ volumes:
    - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 3. **Important for Resend SMTP**: Set `SMTP_FROM` to an email from your verified domain (e.g., `Submit Sentinel <noreply@mynexusgroup.com>`)
 4. Configure persistent volumes:
-   - `/app/config` for client configuration
    - `/app/uploads` for temporary file storage
+   - **Do NOT** add a persistent volume for `/app/config` — `clients.json` is baked into the image from this repo at build time (see [Adding a New Client](#adding-a-new-client-production--coolify)). A volume there overrides the image's file with stale data, so pushed config changes silently stop taking effect.
 5. Deploy with the provided Dockerfile
 
 ## 🔍 Monitoring & Logging

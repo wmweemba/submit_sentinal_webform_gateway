@@ -5,6 +5,15 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-06-21
+
+### Fixed
+- **Stale client config in production**: Removed a persistent Coolify volume mounted at `/app/config` that was shadowing the image-baked `clients.json`, causing newly pushed client configs (e.g. `manifipay`) to never take effect despite successful deploys
+
+### Documentation
+- Documented the working method for adding a new client in production: edit `config/clients.json` → commit → push → let Coolify rebuild/restart (no persistent volume on `/app/config`)
+- Updated Coolify deployment steps to explicitly warn against mounting a persistent volume at `/app/config`
+
 ## [1.0.3] - 2026-06-21
 
 ### Added
