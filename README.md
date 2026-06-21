@@ -124,6 +124,42 @@ When using Resend SMTP (`smtp.resend.com`), you must:
 2. Set `SMTP_FROM` to an email address from your verified domain (e.g., `Submit Sentinel <noreply@yourdomain.com>`)
 3. Do not use `@resend.dev` addresses for production emails to non-verified recipients
 
+### Email Deliverability (Avoiding the Spam Folder)
+
+Emails sent by Submit Sentinel were initially landing in recipients' spam folders, tagged `***SPAM***` by the recipient's mail filter. This was root-caused and fixed across three layers — DNS, application code, and Resend account settings. If you set this up again on a new domain, all three are required:
+
+#### 1. DNS records (set at your DNS host, not necessarily your registrar)
+
+Your **registrar** (e.g. Namecheap) only controls domain ownership. DNS records are managed wherever the domain's **nameservers** point — check with `dig +short NS yourdomain.com`. For this project, DNS is hosted at Hosting.com (cPanel-style, `*.mysecurecloudhost.com` nameservers), so all records below were added there via the DNS/Zone Editor.
+
+| Record | Host | Type | Value | Set by |
+|---|---|---|---|---|
+| SPF | `@` | TXT | `v=spf1 ... include:amazonses.com ~all` (merge with existing SPF if one exists — only one SPF record is allowed per domain) | Resend domain verification |
+| DKIM | `resend._domainkey` | TXT | (public key provided by Resend) | Resend domain verification |
+| DMARC | `_dmarc` | TXT | `v=DMARC1; p=none; rua=mailto:dmarc-reports@yourdomain.com; fo=1` | **Manual — Resend does not add this automatically** |
+
+DMARC is the one most people skip. Resend's own deliverability docs flag a missing DMARC record as the most common cause of spam-foldering. Start with `p=none` (monitor-only, non-disruptive) and verify with:
+```bash
+dig +short TXT _dmarc.yourdomain.com
+```
+
+#### 2. Application code (`index.js`)
+
+- Emails are sent as **multipart/alternative** (both `html` and `text` bodies via `mailOptions.text`/`mailOptions.html`) — HTML-only emails are a deliverability red flag for spam filters.
+- `mailOptions.replyTo` is set via the `SMTP_REPLY_TO` env var (defaults to the address in `SMTP_FROM`), so emails have a monitored reply path instead of a bare `noreply` dead end.
+
+No further action needed here unless you change `SMTP_FROM` — just make sure `SMTP_REPLY_TO` (optional) points to a real, monitored mailbox if you don't want replies to default to the `SMTP_FROM` address.
+
+#### 3. Resend dashboard — disable Open/Click tracking
+
+This was the actual root cause for this project, and is **not a DNS or code issue**: Resend's link/open tracking rewrites every link in your HTML email through a `resend-clicks-a.com` redirect domain. That domain was listed on the invaluement `ivmURI` blocklist at the time, which alone added a 12.0 spam score (5.0 was the recipient's threshold) — entirely independent of SPF/DKIM/DMARC, which were already valid.
+
+**Fix:** Resend dashboard → **Domains** → your domain → **Tracking** → turn **both Open tracking and Click tracking off**. Form-notification emails don't need click/open analytics, and disabling tracking removes both this specific blocklist exposure and the general spam-signal risk of injected tracking pixels/rewritten links.
+
+#### Diagnosing future spam issues
+
+If an email lands in spam again, get the raw headers from the recipient's mail client ("View Source" / "Show Original") and look for `X-Spam-Status` / `X-Spam-Report` — these list the exact rule(s) that fired and their point values, which is far more reliable than guessing. That header is what surfaced the `URIBL_IVMURI` / `resend-clicks-a.com` issue above.
+
 ### Client Configuration
 
 Edit `config/clients.json` to define your clients:

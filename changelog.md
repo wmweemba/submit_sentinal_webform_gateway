@@ -5,6 +5,15 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.6] - 2026-06-21
+
+### Fixed
+- **Email deliverability (spam folder) — root cause confirmed and resolved**: Raw mail headers from the spam-folder copy showed `X-Spam-Status: Yes, score=12.0` driven almost entirely by one rule: `URIBL_IVMURI listed on ivmURI ... [URI: resend-clicks-a.com]` (12 of 12.0 points; DKIM/DMARC were already valid and contributing negative points)
+  - **Actual cause**: Resend's Open/Click tracking was enabled on the `mynexusgroup.com` domain, which rewrites all links in outbound HTML emails through a `resend-clicks-a.com` redirect domain. That redirect domain was listed on the invaluement `ivmURI` blocklist, so every email containing a rewritten link (e.g. the "Powered by" footer link) scored as spam regardless of SPF/DKIM/DMARC correctness
+  - **Fix**: Disabled both Open tracking and Click tracking for the domain in the Resend dashboard (Domains → domain → Tracking). This was a Resend account setting, not a DNS or code change
+  - Verified with a fresh test submission to `info@manifipay.com` — confirmed resolved
+- See `README.md` → "Email Deliverability (Avoiding the Spam Folder)" for the full documented setup (DNS records, code-level fixes, and the Resend tracking setting) to reproduce on a new domain
+
 ## [1.0.5] - 2026-06-21
 
 ### Fixed
