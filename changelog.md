@@ -5,6 +5,17 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2026-06-21
+
+### Fixed
+- **Email deliverability (spam folder)**: Diagnosed ManifiPay test emails landing in spam, tagged `***SPAM***` by the recipient's mail filter
+  - Added a missing DMARC record for `mynexusgroup.com` (`_dmarc` TXT, `p=none`) — domain previously had SPF and DKIM but no DMARC, the most common cause of spam-foldering per Resend's deliverability docs
+  - Added a plain-text MIME part (`formatEmailTextContent`) alongside the existing HTML body — emails were HTML-only with no multipart/alternative text part
+  - Added a configurable `SMTP_REPLY_TO` (defaults to the address in `SMTP_FROM`) so emails have a monitored reply path instead of a bare `noreply` address
+
+### Added
+- **`SMTP_REPLY_TO` environment variable** (optional) — documented in `.env.example`
+
 ## [1.0.4] - 2026-06-21
 
 ### Fixed
