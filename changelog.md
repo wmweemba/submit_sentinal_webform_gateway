@@ -5,6 +5,17 @@ All notable changes to the Submit Sentinel project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2026-06-21
+
+### Added
+- **New client**: Added `manifipay` client configuration for the ManifiPay loan application form
+  - Allowed origins: `https://manifipay.com`, `https://www.manifipay.com`
+  - Recipient email: `info@manifipay.com`
+
+### Changed
+- **Temporary staging origin**: Added `https://manifipay.nxhub.online` to `manifipay` allowed origins for pre-launch staging tests
+  - See `config/clients.json.notes.md` — must be removed before `manifipay.com` goes live
+
 ## [1.0.2] - 2026-03-11
 
 ### Added

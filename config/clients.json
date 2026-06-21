@@ -3,5 +3,14 @@
     "allowedOrigins": ["https://pershingsquare.nxhub.online", "http://localhost:3000", "https://psq-associates.com"],
     "recipientEmail": "consult@psq-associates.com",
     "displayName": "Pershing Square Form Submission"
+  },
+  "manifipay": {
+    "allowedOrigins": [
+      "https://manifipay.com",
+      "https://www.manifipay.com",
+      "https://manifipay.nxhub.online"
+    ],
+    "recipientEmail": "info@manifipay.com",
+    "displayName": "ManifiPay Loan Application"
   }
 }
